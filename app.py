@@ -36,8 +36,6 @@ def post_index():
                     break
                 if variables[variables_array[1]] in solution.free_symbols:
                     print solution
-                    # print string.replace(re.sub(r'.*\(.*,\s?(.*)(,.*)?\)', r'\1', str(solution)), variables_array[1], 'variables["' + variables_array[1] + '"]')
-                    # plot(eval(string.replace(re.sub(r'.*\(.*,\s?(.*)(,.*)?\)', r'\1', str(solution)), variables_array[1], 'variables["' + variables_array[1] + '"]')), ylabel=variables_array[0], xlabel=variables_array[1])
                     plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), ylabel=variables_array[0], xlabel=variables_array[1])
                     bokeh_components = True
             if bokeh_components:
