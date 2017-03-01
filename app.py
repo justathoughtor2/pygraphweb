@@ -4,6 +4,7 @@ import string
 from bokeh import mpl
 from bokeh.embed import components
 import re
+import matplotlib.pyplot as plt
 
 @get('/')
 @view('index')
@@ -13,6 +14,7 @@ def get_index():
 @post('/')
 @view('index')
 def post_index():
+    plt.close('all')
     expression_trimmed = string.replace(request.forms.get('expression'), ' ', '')
     expression_elements = string.split(expression_trimmed, '=')
     variables_trimmed = string.replace(request.forms.get('variables'), ' ', '')
@@ -30,16 +32,36 @@ def post_index():
         solved_expression = solveset(expression, variables[variables_array[0]], domain=S.Reals)
 
         bokeh_components = False
-        if len(variables_array) == 2 and not type(solved_expression) == EmptySet:
+
+        if len(variables_array) == 2 and not type(solved_expression) == EmptySet and not type(solved_expression) == ConditionSet:
             for index, solution in enumerate(solved_expression):
                 if(index > 9):
                     break
                 if variables[variables_array[1]] in solution.free_symbols:
-                    print solution
-                    plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), ylabel=variables_array[0], xlabel=variables_array[1])
-                    bokeh_components = True
+                    if re.match(r'(And|Or)\(.*\)', str(solution)):
+                        print solution
+                        solution_redacted = re.sub(r'(And|Or)\((.*)\)', r'\2', str(solution))
+                        solution_trimmed = string.replace(solution_redacted, ' ', '')
+                        solution_set = re.split(r'[<>]\=?[\d\-o]+,', solution_trimmed)
+                        print solution_set
+                        for sol in solution_set[:5]:
+                            sol = re.sub(r'[<>]\=?[\d\-o]+$', '', sol)
+                            print sol
+                            if not bokeh_components:
+                                plots = plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])
+                            else:
+                                plots.append(plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])[0])
+                            bokeh_components = True
+                    else:
+                        print solution
+                        if not bokeh_components:
+                            plots = plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])
+                        else:
+                            plots.append(plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])[0])
+                        bokeh_components = True
             if bokeh_components:
-                script, div = components(mpl.to_bokeh(xkcd=True))
+                plots.show()
+                script, div = components(mpl.to_bokeh())
             else:
                 script = ''
                 div = 'No graphable solutions!'
