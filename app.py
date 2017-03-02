@@ -48,7 +48,6 @@ def post_index():
                             print sol
                             if not bokeh_components:
                                 plots = plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])
-                                f = plots._backend.fig
                             else:
                                 plots.append(plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])[0])
                             bokeh_components = True
@@ -56,13 +55,13 @@ def post_index():
                         print solution
                         if not bokeh_components:
                             plots = plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])
-                            f = plots._backend.fig
                         else:
                             plots.append(plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])[0])
                         bokeh_components = True
             if bokeh_components:
                 print plots
                 plots.show()
+                f = plots._backend.fig
                 print f
                 div = mpld3.fig_to_html(f)
             else:
