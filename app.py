@@ -4,7 +4,7 @@ import string
 from bokeh import mpl
 from bokeh.embed import components
 import re
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt, mpld3
 
 @get('/')
 @view('index')
@@ -19,7 +19,6 @@ def post_index():
     expression_elements = string.split(expression_trimmed, '=')
     variables_trimmed = string.replace(request.forms.get('variables'), ' ', '')
     variables_array = string.split(variables_trimmed, ',')
-    script = ''
     div = 'Please supply a two-variable expression to create a graph!'
     if len(expression_elements) >= 2:
         variables = dict()
@@ -48,25 +47,28 @@ def post_index():
                             sol = re.sub(r'[<>]\=?[\d\-o]+$', '', sol)
                             print sol
                             if not bokeh_components:
-                                plots = plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])
+                                plots = plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])
+                                f = plots._backend.fig
                             else:
-                                plots.append(plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])[0])
+                                plots.append(plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])[0])
                             bokeh_components = True
                     else:
                         print solution
                         if not bokeh_components:
-                            plots = plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])
+                            plots = plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])
+                            f = plots._backend.fig
                         else:
-                            plots.append(plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylabel=variables_array[0], xlabel=variables_array[1])[0])
+                            plots.append(plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])[0])
                         bokeh_components = True
             if bokeh_components:
+                print plots
                 plots.show()
-                script, div = components(mpl.to_bokeh())
+                print f
+                div = mpld3.fig_to_html(f)
             else:
-                script = ''
                 div = 'No graphable solutions!'
 
-        return dict(expression=latex(expression), solved_expression=variables_array[0] + '=' + latex(solved_expression), script=script, div=div)
-    return dict(expression=latex(expression_elements[0]), solved_expression='\\text{Nothing to see here!}', script='', div='Please supply an equality function to create a graph!')
+        return dict(expression=latex(expression), solved_expression=variables_array[0] + '=' + latex(solved_expression), div=div)
+    return dict(expression=latex(expression_elements[0]), solved_expression='\\text{Nothing to see here!}', div='Please supply an equality function to create a graph!')
 
 run(host='localhost', port=8080, debug=True)
