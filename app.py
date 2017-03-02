@@ -1,8 +1,6 @@
 from bottle import get, post, view, request, run
 from sympy import *
 import string
-from bokeh import mpl
-from bokeh.embed import components
 import re
 import matplotlib.pyplot as plt, mpld3
 
@@ -23,14 +21,23 @@ def post_index():
     if len(expression_elements) >= 2:
         variables = dict()
         for variable in variables_array:
-            variables[variable] = symbols(variable)
+            try:
+                variables[variable] = symbols(variable)
+            except Exception:
+                return dict(expression=latex(expression_trimmed), solved_expression='\\text{Does not compute!}', div='Please supply an equality function with real solutions to create a graph!')
             expression_elements[0] = string.replace(expression_elements[0], variable, 'variables["' + variable + '"]')
             expression_elements[1] = string.replace(expression_elements[1], variable, 'variables["' + variable + '"]')
 
-        expression = Eq(eval(expression_elements[0]), eval(expression_elements[1]))
-        solved_expression = solveset(expression, variables[variables_array[0]], domain=S.Reals)
+        try:
+            expression = Eq(eval(expression_elements[0]), eval(expression_elements[1]))
+        except Exception:
+            return dict(expression=latex(expression_trimmed), solved_expression='\\text{Does not compute!}', div='Please supply an equality function with real solutions to create a graph!')
+        try:
+            solved_expression = solveset(expression, variables[variables_array[0]], domain=S.Reals)
+        except Exception:
+            return dict(expression=latex(expression), solved_expression='\\text{Does not compute!}', div='Please supply an equality function with real solutions to create a graph!')
 
-        bokeh_components = False
+        mpld3_components = False
 
         if len(variables_array) == 2 and not type(solved_expression) == EmptySet and not type(solved_expression) == ConditionSet:
             for index, solution in enumerate(solved_expression):
@@ -46,19 +53,19 @@ def post_index():
                         for sol in solution_set[:5]:
                             sol = re.sub(r'[<>]\=?[\d\-o]+$', '', sol)
                             print sol
-                            if not bokeh_components:
+                            if not mpld3_components:
                                 plots = plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])
                             else:
                                 plots.append(plot(eval(string.replace(sol, variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])[0])
-                            bokeh_components = True
+                            mpld3_components = True
                     else:
                         print solution
-                        if not bokeh_components:
+                        if not mpld3_components:
                             plots = plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])
                         else:
                             plots.append(plot(eval(string.replace(str(solution), variables_array[1], 'variables["' + variables_array[1] + '"]')), (variables[variables_array[1]], -100, 100), ylim=(-15, 15), xlim=(-15,15), ylabel=variables_array[0], xlabel=variables_array[1])[0])
-                        bokeh_components = True
-            if bokeh_components:
+                        mpld3_components = True
+            if mpld3_components:
                 print plots
                 plots.show()
                 f = plots._backend.fig
