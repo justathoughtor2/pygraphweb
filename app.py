@@ -62,7 +62,7 @@ def equate():
                                     sol = re.sub(r'[<>]\=?[\d\-o]+$', '', sol)
                                     print(sol, file=sys.stdout)
                                     lambda_func = lambdify(variables[variables_array[1]], eval(sol.replace(variables_array[1], 'variables["' + variables_array[1] + '"]')))
-                                    var0_vals = np.arange(-15, 15, dtype=float)
+                                    var0_vals = np.linspace(-15, 15, 200)
                                     var1_vals = lambda_func(var0_vals)
                                     if not mpld3_components:
                                         f = plt.figure()
@@ -79,7 +79,7 @@ def equate():
                             print(solution, file=sys.stdout)
                             try:
                                 lambda_func = lambdify(variables[variables_array[1]], eval(str(solution).replace(variables_array[1], 'variables["' + variables_array[1] + '"]')))
-                                var0_vals = np.arange(-15, 15, dtype=float)
+                                var0_vals = np.linspace(-15, 15, 200)
                                 var1_vals = lambda_func(var0_vals)
                                 if not mpld3_components:
                                     f = plt.figure()
