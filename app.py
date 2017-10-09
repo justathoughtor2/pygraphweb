@@ -165,12 +165,15 @@ def calculate():
         sub = f.add_subplot(1, 1, 1)
         subplots = []
         labels = []
-        x_sample = np.linspace(0, len(count_per_month), 300)
-        for column in count_per_month.sort_values(count_per_month.first_valid_index(),axis=1,ascending=False).ix[:,0:12]:
-            y_sample = spline(range(0, len(count_per_month[column])), count_per_month[column], x_sample)
-            subplots.append(plt.plot(x_sample[::-1], y_sample[::-1], label=column)[0])
+        x_sample = np.linspace(0, len(count_per_month), 200)
+        for column in count_per_month.sort_values(list(count_per_month.index.values),axis=1,ascending=False).ix[:,0:10]:
+            print(count_per_month[column], file=sys.stderr)
+            y_sample = spline(range(0, len(count_per_month[column])), count_per_month[column].fillna(value=0.), x_sample)
+            print(y_sample, file=sys.stderr)
+            subplots.append(y_sample[::-1])
             labels.append(column)
-        plt.legend(handles=subplots, labels=labels)
+        subplot = plt.stackplot(x_sample[::-1], subplots, labels=labels)
+        plt.legend(handles=subplot, labels=labels)
         div = mpld3.fig_to_html(f)
         return render_template('data.html', expression='count(' + data_variable + ')', solved_expression=count_per_month, div=div)
 
