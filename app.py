@@ -146,26 +146,33 @@ def calculate():
             # if not time_variable in df.columns or not data_variable in df.columns:
             #     raise Exception
         df[time_variable] = pd.to_datetime(df[time_variable])
-        count_per_month = df.resample('1M', on=time_variable).count()[time_variable]
-        calcs_in = {}
-        previous_count = 0
-        for index, count in enumerate(count_per_month):
-            total_count = previous_count + count
-            calcs_in[len(count_per_month) - index] = df[data_variable][previous_count:total_count].value_counts()
-            previous_count += count
-        calcs = {}
-        for index, column in calcs_in.items():
-            if not index in calcs:
-                calcs[index] = []
-            calcs[index].append(list(calcs_in[index]))
-        f = plt.figure()
-        for index, calc in calcs.items():
-            x_sample = np.linspace(0, len(calcs), 300)
-            y_smooth = spline(range(0, len(calcs)), calc, x_sample)
-            sub = f.add_subplot(1, 1, 1)
-            sub.plot(x_sample, y_sample, label=index)
+        count_per_month = df.groupby(time_variable)[data_variable].value_counts().unstack().resample('1M').sum()
+        print(count_per_month, file=sys.stderr)
+        # calcs_in = pd.DataFrame()
+        # previous_count = 0
+        # for index, count in enumerate(count_per_month):
+        #     total_count = previous_count + count
+        #     calcs_in.append(df[data_variable][previous_count:total_count].value_counts())
+        #     previous_count += count
+        # print(calcs_in, file=sys.stderr)
+        # calcs = {}
+        # for index, column in calcs_in.items():
+        #     if not index in calcs:
+        #         calcs[index] = []
+        #     calcs[index].append(column.transpose())
+        f = plt.figure(figsize=(10, 8))
+        # print(calcs, file=sys.stderr)
+        sub = f.add_subplot(1, 1, 1)
+        subplots = []
+        labels = []
+        x_sample = np.linspace(0, len(count_per_month), 300)
+        for column in count_per_month.sort_values(count_per_month.first_valid_index(),axis=1,ascending=False).ix[:,0:12]:
+            y_sample = spline(range(0, len(count_per_month[column])), count_per_month[column], x_sample)
+            subplots.append(plt.plot(x_sample[::-1], y_sample[::-1], label=column)[0])
+            labels.append(column)
+        plt.legend(handles=subplots, labels=labels)
         div = mpld3.fig_to_html(f)
-        return render_template('data.html', expression=str(calcs_in), solved_expression='\\text{Does not compute!}', div=div)
+        return render_template('data.html', expression='count(' + data_variable + ')', solved_expression=count_per_month, div=div)
 
         # except Exception:
         #     return redirect(request.url)
