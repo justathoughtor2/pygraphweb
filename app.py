@@ -113,7 +113,7 @@ def equate():
 @app.route('/data', methods=['GET', 'POST'])
 def calculate():
     if request.method == 'GET':
-        return render_template('data.html', expression='\\text{None yet!}', solved_expression='\\text{None here either!}', script='', div='')
+        return render_template('data.html', expression='\\text{None yet!}', solved_expression='None here either!', script='', div='')
     else:
         plt.close('all')
         # if 'input-data' not in request.files:
